@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FANA Control Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0b10;
+    --ink-deep: #06070a;
+    --panel: #12141c;
+    --panel-raised: #171a24;
+    --hairline: #262b38;
+    --hairline-soft: #1b1e29;
+    --paper: #ece7dc;
+    --paper-dim: #8b8fa3;
+    --brass: #c9973f;
+    --brass-soft: rgba(201,151,63,0.14);
+    --green: #3ecf8e;
+    --green-soft: rgba(62,207,142,0.14);
+    --red: #e5484d;
+    --red-soft: rgba(229,72,77,0.14);
+    --blue: #6f9bd6;
+
+    --c-fana: #7fae8a;   --c-fana-soft: rgba(127,174,138,0.14);
+    --c-film: #a78bc4;   --c-film-soft: rgba(167,139,196,0.14);
+    --c-game: #6fb3c4;   --c-game-soft: rgba(111,179,196,0.14);
+    --c-horor: #c17a6b;  --c-horor-soft: rgba(193,122,107,0.14);
+    --c-berita: #7fa0d1; --c-berita-soft: rgba(127,160,209,0.14);
+
+    --ease: cubic-bezier(.22,.61,.36,1);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 28px 24px 60px;
+    position: relative;
+  }
+  .serif { font-family: 'Fraunces', serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a, button, input { font-family: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 4px; }
+
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 78%);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse 60% 40% at 15% -5%, rgba(201,151,63,0.07), transparent 60%),
+                radial-gradient(ellipse 50% 40% at 100% 10%, rgba(111,155,214,0.06), transparent 60%);
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; transition: transform 0.5s var(--ease), filter 0.5s var(--ease); }
+  .wrap.behind { transform: scale(0.97); filter: brightness(0.55) blur(1px); pointer-events: none; }
+
+  /* ===== Boot ===== */
+  #bootOverlay { position: fixed; inset: 0; z-index: 999; background: var(--ink-deep); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; transition: opacity 0.5s var(--ease), visibility 0.5s; }
+  #bootOverlay.hide { opacity: 0; visibility: hidden; }
+  .boot-eq { display: flex; gap: 4px; align-items: flex-end; height: 34px; }
+  .boot-eq span { width: 5px; background: var(--brass); animation: eqBounce 0.9s ease-in-out infinite; border-radius: 1px; }
+  .boot-eq span:nth-child(1) { animation-delay: 0s; height: 40%; }
+  .boot-eq span:nth-child(2) { animation-delay: .12s; height: 70%; }
+  .boot-eq span:nth-child(3) { animation-delay: .24s; height: 100%; }
+  .boot-eq span:nth-child(4) { animation-delay: .36s; height: 55%; }
+  .boot-eq span:nth-child(5) { animation-delay: .48s; height: 80%; }
+  @keyframes eqBounce { 0%,100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+  .boot-text { font-size: 12px; letter-spacing: 3px; color: var(--paper-dim); }
+  .boot-hint { font-size: 13px; color: var(--paper-dim); opacity: 0.6; }
+
+  /* ===== Masthead ===== */
+  .masthead { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--hairline); opacity: 0; animation: riseIn 0.6s var(--ease) 0.05s forwards; }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .onair-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .onair-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px rgba(229,72,77,0.8); animation: onairPulse 1.6s ease-in-out infinite; }
+  @keyframes onairPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .onair-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 2px; color: var(--paper-dim); }
+  .brand { font-size: 32px; margin: 0; font-weight: 600; letter-spacing: -0.3px; }
+  .brand em { font-style: italic; color: var(--brass); font-weight: 500; }
+  .brand-sub { color: var(--paper-dim); font-size: 14.5px; margin: 5px 0 0; }
+  .masthead-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .date-label { font-size: 12.5px; color: var(--paper-dim); letter-spacing: 0.3px; }
+  .clock-row { display: flex; align-items: baseline; gap: 7px; }
+  .live-clock { font-size: 20px; letter-spacing: 1px; color: var(--paper); }
+  .wib-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--brass); letter-spacing: 1px; border: 1px solid var(--brass); border-radius: 3px; padding: 1px 5px; }
+  .demo-pill { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--ink); background: var(--brass); padding: 3px 8px; border-radius: 3px; }
+  .demo-pill.live { background: var(--green); }
+
+  .poller-control { display: flex; align-items: center; gap: 9px; margin-top: 4px; }
+  .poller-status-pill { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--hairline); color: var(--paper-dim); transition: all 0.25s var(--ease); }
+  .poller-status-pill.on { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+  .poller-status-pill.off { color: var(--paper-dim); border-color: var(--hairline); }
+  .poller-status-pill.unknown { color: var(--red); border-color: var(--red); background: var(--red-soft); }
+
+  /* ===== Health strip ===== */
+  .health-strip { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; opacity: 0; animation: riseIn 0.6s var(--ease) 0.1s forwards; }
+  .health-track { flex: 1; height: 5px; background: var(--hairline-soft); border-radius: 3px; overflow: hidden; }
+  .health-fill { height: 100%; background: linear-gradient(90deg, var(--brass), var(--green)); border-radius: 3px; width: 0%; transition: width 0.9s var(--ease) 0.3s; }
+  .health-text { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--paper-dim); white-space: nowrap; }
+  .health-text strong { color: var(--paper); }
+
+  /* ===== Search ===== */
+  .search-row { position: relative; margin-bottom: 26px; opacity: 0; animation: riseIn 0.6s var(--ease) 0.14s forwards; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--paper-dim); pointer-events: none; }
+  .search-icon svg { width: 17px; height: 17px; }
+  .search-input {
+    width: 100%; background: var(--panel); border: 1px solid var(--hairline); color: var(--paper); border-radius: 10px;
+    padding: 12px 14px 12px 40px; font-size: 14.5px; transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+  }
+  .search-input::placeholder { color: var(--paper-dim); }
+  .search-input:focus { border-color: var(--brass); background: var(--panel-raised); outline: none; }
+
+  /* ===== Section titles ===== */
+  .section-title { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--paper-dim); display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+  .section-title::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+  .queue-count { font-family: 'IBM Plex Mono', monospace; background: var(--brass-soft); color: var(--brass); padding: 2px 8px; border-radius: 10px; font-size: 11px; letter-spacing: 0.5px; }
+  section.top-section { margin-bottom: 32px; opacity: 0; animation: riseIn 0.6s var(--ease) forwards; }
+  #queueSection { animation-delay: 0.18s; }
+  #rosterSection { animation-delay: 0.24s; }
+
+  /* ===== Queue strip (needs review) ===== */
+  .queue-strip { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+  .queue-chip {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-width: 240px;
+    background: var(--panel-raised); border: 1px solid var(--brass); border-radius: 12px; padding: 10px 12px;
+    cursor: pointer; transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+  .queue-chip:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.35); }
+  .chip-name { font-weight: 700; font-size: 13.5px; color: var(--paper); }
+  .chip-topic { font-size: 12px; color: var(--paper-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+  .chip-arrow { margin-left: auto; color: var(--brass); flex-shrink: 0; }
+  .chip-arrow svg { width: 14px; height: 14px; transform: rotate(-90deg); }
+
+  /* ===== Icon badge (shared: grid card / chip / detail header) ===== */
+  .icon-badge {
+    position: relative; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; background-size: cover; background-position: center; cursor: pointer;
+  }
+  .icon-badge svg { width: 52%; height: 52%; }
+  .icon-edit-overlay {
+    position: absolute; inset: 0; border-radius: inherit; background: rgba(0,0,0,0); color: #fff;
+    display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.2s var(--ease);
+  }
+  .icon-badge:hover .icon-edit-overlay { opacity: 1; background: rgba(0,0,0,0.45); }
+  .icon-remove {
+    position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--red); color: #fff; border: 2px solid var(--ink); font-size: 12px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s var(--ease); z-index: 2;
+  }
+  .icon-badge.has-photo:hover .icon-remove { opacity: 1; }
+
+  /* ===== Power toggle (distinctive on/off) ===== */
+  .power-toggle {
+    position: relative; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid var(--hairline); background: var(--panel-raised); color: var(--paper-dim);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: color 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease), transform 0.15s var(--ease-spring);
+  }
+  .power-toggle svg { width: 15px; height: 15px; }
+  .power-toggle.on { color: var(--green); border-color: var(--green); background: var(--green-soft); box-shadow: 0 0 10px rgba(62,207,142,0.35); }
+  .power-toggle:active { transform: scale(0.88); }
+  .power-ring { position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--green); opacity: 0; pointer-events: none; }
+  .power-toggle.pulse .power-ring { animation: powerPulse 0.6s var(--ease) forwards; }
+  @keyframes powerPulse { 0% { opacity: 0.85; transform: scale(0.7); } 100% { opacity: 0; transform: scale(1.55); } }
+
+  /* ===== Unit grid (square cards) =====
+     Kolom TETAP (bukan auto-fill) -- akun baru selalu menambah BARIS baru
+     di bawah, tidak pernah menambah kolom ke samping, berapa pun lebar
+     layarnya. */
+  .unit-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .ig-disconnected { color: var(--red); opacity: 0.85; font-style: italic; }
+  .unit-card {
+    aspect-ratio: 1 / 1.08; background: var(--panel); border: 1px solid var(--hairline-soft); border-radius: 16px;
+    padding: 16px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;
+    transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), opacity 0.2s var(--ease);
+    position: relative;
+  }
+  .unit-card:hover { transform: translateY(-3px); border-color: var(--hairline); box-shadow: 0 10px 26px rgba(0,0,0,0.35); }
+  .unit-card:active { transform: translateY(-1px) scale(0.98); }
+  /* Unit nonaktif: SELURUH kartu jadi abu-abu (bukan cuma tombol power),
+     supaya bisa dibedain sekilas tanpa perlu baca teks satu-satu. */
+  .unit-card.is-off { filter: grayscale(1) opacity(0.55); }
+  .unit-card.is-off:hover { filter: grayscale(0.75) opacity(0.8); }
+  .unit-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .unit-card .icon-badge { width: 50px; height: 50px; }
+  .unit-name { font-weight: 700; font-size: 15px; margin-top: 12px; line-height: 1.25; }
+  .unit-handle { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--paper-dim); margin-top: 2px; }
+  .unit-tag { display: inline-block; font-size: 10.5px; padding: 2px 8px; border-radius: 999px; margin-top: 8px; }
+  .unit-card-foot { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+  .unit-status-text { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--paper-dim); letter-spacing: 0.5px; }
+  .tally { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--paper-dim); }
+  .tally.draft { background: var(--brass); box-shadow: 0 0 8px var(--brass); animation: onairPulse 1s ease-in-out infinite; }
+  .tally.done { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .empty-hint { color: var(--paper-dim); font-size: 14px; padding: 20px 0; text-align: center; }
+
+  /* ===== Detail view (shared-element transition target) ===== */
+  .detail-view { position: fixed; inset: 0; z-index: 500; background: var(--ink); overflow-y: auto; display: none; }
+  .detail-inner { max-width: 760px; margin: 0 auto; padding: 24px 24px 90px; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--paper-dim); font-size: 13.5px; cursor: pointer; padding: 6px 4px 6px 0; margin-bottom: 18px; transition: color 0.2s var(--ease); }
+  .back-btn:hover { color: var(--paper); }
+  .back-btn svg { width: 15px; height: 15px; }
+
+  .detail-id-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .detail-id-row .icon-badge { width: 64px; height: 64px; }
+  .detail-name { font-size: 26px; font-weight: 600; }
+  .detail-handle { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--paper-dim); margin-top: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .detail-power { margin-left: auto; }
+  .detail-desc { color: var(--paper-dim); margin: 16px 0 0; font-size: 14.5px; }
+
+  .detail-quick-settings { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hairline-soft); }
+  .qs-item { display: flex; align-items: center; gap: 10px; }
+  .qs-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 1px; color: var(--paper-dim); width: 100%; margin-bottom: 6px; }
+  .qs-col { display: flex; flex-direction: column; }
+
+  .toggle { width: 42px; height: 24px; border-radius: 999px; background: var(--hairline-soft); border: 1px solid var(--hairline); position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s var(--ease); }
+  .toggle.on { background: var(--green-soft); border-color: var(--green); }
+  .toggle-knob { width: 16px; height: 16px; border-radius: 50%; background: var(--paper-dim); position: absolute; top: 3px; left: 3px; transition: left 0.25s var(--ease-spring), background 0.2s; }
+  .toggle.on .toggle-knob { left: 22px; background: var(--green); }
+  .toggle-text { font-size: 13px; color: var(--paper-dim); }
+  .toggle-text strong { color: var(--paper); }
+  input[type="time"] { background: var(--panel-raised); border: 1px solid var(--hairline); color: var(--paper); border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; padding: 7px 10px; }
+  .btn { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 13.5px; border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--hairline); background: var(--panel); color: var(--paper); transition: background 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.15s var(--ease-spring); display: inline-flex; align-items: center; gap: 7px; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0) scale(0.97); }
+  .btn svg { width: 15px; height: 15px; }
+  .btn.small { padding: 7px 12px; font-size: 12px; }
+  .btn.approve { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .btn.approve:hover { background: rgba(62,207,142,0.24); }
+  .btn.reject { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .btn.reject:hover { background: rgba(229,72,77,0.24); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  .detail-nav-pills { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; background: var(--ink); padding: 18px 0 14px; margin-top: 22px; border-bottom: 1px solid var(--hairline); }
+  .nav-pill { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.5px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--panel); color: var(--paper-dim); cursor: pointer; transition: all 0.25s var(--ease); }
+  .nav-pill.active { border-color: var(--brass); color: var(--brass); background: var(--brass-soft); }
+
+  .detail-section { padding: 30px 0; border-bottom: 1px solid var(--hairline-soft); scroll-margin-top: 74px; }
+  .detail-section:last-child { border-bottom: none; }
+  .detail-section-title { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--paper-dim); margin: 0 0 18px; display: flex; align-items: center; gap: 10px; }
+  .illustrative-note { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--paper-dim); opacity: 0.55; text-transform: none; letter-spacing: 0; }
+
+  .draft-topic { font-size: 19px; color: var(--brass); margin-bottom: 10px; }
+  .thumb-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; }
+  .thumb { width: 92px; height: 114px; flex-shrink: 0; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--hairline); background: #0d0c1e; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-tag { position: absolute; bottom: 5px; left: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; background: rgba(0,0,0,0.55); padding: 1px 5px; border-radius: 3px; color: #fff; }
+  .draft-caption { font-size: 15px; color: var(--paper); white-space: pre-wrap; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; border: 1px solid var(--hairline-soft); }
+  .draft-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .empty-approve { color: var(--paper-dim); font-size: 14.5px; background: var(--panel); border: 1px dashed var(--hairline); border-radius: 10px; padding: 20px; }
+
+  .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
+  .history-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--hairline-soft); background: var(--panel); transition: transform 0.2s var(--ease); }
+  .history-card:hover { transform: translateY(-2px); }
+  .history-thumb { aspect-ratio: 4/5; }
+  .history-meta { padding: 10px 12px; }
+  .history-topic { font-size: 13px; font-weight: 600; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-date { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--paper-dim); }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; margin-bottom: 22px; }
+  .kpi-card { background: var(--panel); border: 1px solid var(--hairline-soft); border-radius: 12px; padding: 16px; }
+  .kpi-value { font-family: 'Fraunces', serif; font-size: 28px; color: var(--brass); }
+  .kpi-label { font-size: 12px; color: var(--paper-dim); margin-top: 4px; }
+
+  .insight-chart-wrap { background: var(--panel); border: 1px solid var(--hairline-soft); border-radius: 12px; padding: 18px; }
+  .insight-chart-title { font-size: 12px; color: var(--paper-dim); margin-bottom: 12px; font-family: 'IBM Plex Mono', monospace; }
+  .insight-chart { display: flex; align-items: flex-end; gap: 5px; height: 90px; }
+  .insight-bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--hairline); transition: height 0.7s var(--ease); }
+  .insight-bar.ok { background: linear-gradient(180deg, var(--green), rgba(62,207,142,0.35)); }
+
+  /* ===== Insight v2: tabs (7 hari / 30 hari / rekap bulanan) ===== */
+  .insight-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .insight-tab { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.5px; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--panel); color: var(--paper-dim); cursor: pointer; transition: all 0.2s var(--ease); }
+  .insight-tab:hover { border-color: var(--brass); color: var(--paper); }
+  .insight-tab.active { border-color: var(--brass); color: var(--brass); background: var(--brass-soft); }
+  .insight-subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1px; color: var(--paper-dim); margin: 22px 0 12px; }
+  .insight-subtitle:first-child { margin-top: 0; }
+
+  .insight-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .insight-sync-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--paper-dim); opacity: 0.75; }
+
+  .post-insight-list { display: flex; flex-direction: column; gap: 8px; }
+  .post-insight-row { background: var(--panel); border: 1px solid var(--hairline-soft); border-radius: 10px; padding: 12px 15px; }
+  .post-insight-topic { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+  .post-insight-date { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--paper-dim); margin-bottom: 9px; }
+  .post-insight-stats { display: flex; gap: 14px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--paper-dim); }
+  .post-insight-stats svg { width: 12px; height: 12px; vertical-align: -1px; margin-right: 3px; }
+  .post-insight-stat.na { opacity: 0.4; }
+  .post-insight-error { font-size: 12.5px; color: var(--paper-dim); font-style: italic; background: rgba(229,72,77,0.06); border: 1px dashed var(--red); border-radius: 6px; padding: 8px 10px; }
+
+  .month-list { display: flex; flex-direction: column; gap: 8px; }
+  .month-row { display: flex; justify-content: space-between; align-items: center; background: var(--panel); border: 1px solid var(--hairline-soft); border-radius: 10px; padding: 13px 16px; flex-wrap: wrap; gap: 6px; }
+  .month-name { font-weight: 600; font-size: 14px; }
+  .month-stats { display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--paper-dim); }
+  .insight-disabled { color: var(--paper-dim); font-size: 14.5px; background: var(--panel); border: 1px dashed var(--hairline); border-radius: 10px; padding: 20px; }
+  .insight-disabled strong { color: var(--red); }
+
+  /* ===== toast ===== */
+  #toast { position: fixed; bottom: 24px; right: 24px; max-width: 360px; z-index: 600; background: var(--panel-raised); border: 1px solid var(--hairline); border-radius: 10px; padding: 13px 16px; font-size: 14px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); transform: translateX(120%); opacity: 0; transition: transform 0.4s var(--ease-spring), opacity 0.3s var(--ease); display: flex; align-items: center; gap: 9px; }
+  #toast.show { transform: translateX(0); opacity: 1; }
+  #toast .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); flex-shrink: 0; }
+
+  footer.foot-note { text-align: center; color: var(--paper-dim); font-size: 12px; margin-top: 40px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; opacity: 0.6; }
+
+  .skeleton-card { aspect-ratio: 1/1.08; background: var(--panel); border-radius: 16px; position: relative; overflow: hidden; }
+  .skeleton-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent, rgba(255,255,255,0.05), transparent); animation: sheen 1.2s linear infinite; }
+  @keyframes sheen { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+  @media (max-width: 900px) {
+    .unit-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 640px) {
+    body { padding: 20px 14px 50px; font-size: 15px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead-right { align-items: flex-start; }
+    .unit-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-inner { padding: 18px 16px 80px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bootOverlay">
+  <div class="boot-eq"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="boot-text mono">FANA CONTROL DESK</div>
+  <div class="boot-hint">Menyiapkan siaran&hellip; (klik utk lewati)</div>
+</div>
+
+<div class="wrap" id="gridWrap">
+  <header class="masthead">
+    <div>
+      <div class="onair-row"><span class="onair-dot"></span><span class="onair-label">DASHBOARD AKTIF</span></div>
+      <h1 class="brand serif">FANA <em>Control Desk</em></h1>
+      <p class="brand-sub">Studio otomatisasi konten Instagram &middot; <span id="unitLive">5 unit</span></p>
+    </div>
+    <div class="masthead-right">
+      <div class="date-label mono" id="dateLabel">&nbsp;</div>
+      <div class="clock-row"><div class="live-clock mono" id="liveClock">00:00:00</div><span class="wib-tag">WIB</span></div>
+      <div class="demo-pill" id="demoPillSlot">MEMUAT&hellip;</div>
+      <div class="poller-control">
+        <div class="poller-status-pill" id="pollerStatusPill">POLLER: ?</div>
+        <div class="toggle" id="pollerToggle" role="switch" tabindex="0" title="Cek status FANA Poller&hellip;">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="health-strip"><div class="health-track"><div class="health-fill" id="healthFill"></div></div><div class="health-text" id="healthText">memeriksa kesehatan sistem&hellip;</div></div>
+
+  <div class="search-row">
+    <span class="search-icon" id="searchIconSlot"></span>
+    <input type="text" id="searchInput" class="search-input" placeholder="Cari unit, username, atau topik&hellip;">
+  </div>
+
+  <section id="queueSection" class="top-section" style="display:none;">
+    <div class="section-title">Perlu Ditinjau <span class="queue-count" id="queueCount">0</span></div>
+    <div class="queue-strip" id="queueStrip"></div>
+  </section>
+
+  <section id="rosterSection" class="top-section">
+    <div class="section-title">Semua Unit</div>
+    <div id="rosterGrid" class="unit-grid">
+      <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+      <div class="skeleton-card"></div><div class="skeleton-card"></div>
+    </div>
+    <div class="empty-hint" id="emptySearchState" style="display:none;">Tidak ada unit yang cocok dengan pencarian.</div>
+  </section>
+
+  <footer class="foot-note">OPENCLAW GATEWAY &middot; SISTEM MULTI-AGENT &middot; TEMA: EDITORIAL CONTROL DESK</footer>
+</div>
+
+<div class="detail-view" id="detailView"></div>
+
+<input type="file" id="iconFileInput" accept="image/*" style="display:none;">
+<div id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<script>
+/* =========================================================================
+   ICONS
+   ========================================================================= */
+const ICONS = {
+  globe: `<circle cx="12" cy="12" r="8.2"/><ellipse cx="12" cy="12" rx="3.4" ry="8.2"/><path d="M3.8 12h16.4"/><path d="M5.2 7.6h13.6M5.2 16.4h13.6"/>`,
+  play: `<circle cx="12" cy="12" r="8.2"/><path d="M10 8.6l6 3.4-6 3.4z" fill="currentColor" stroke="none"/>`,
+  gamepad: `<rect x="3.6" y="8" width="16.8" height="9" rx="4.5"/><path d="M8 10.2v4.6M5.7 12.5h4.6"/><circle cx="16" cy="11.1" r="1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="13.2" r="1" fill="currentColor" stroke="none"/>`,
+  ghost: `<path d="M6 20V11a6 6 0 0112 0v9l-2.1-1.8L14 20l-2-1.8L10 20l-1.9-1.8z"/><circle cx="9.3" cy="11.6" r="0.9" fill="currentColor" stroke="none"/><circle cx="14.7" cy="11.6" r="0.9" fill="currentColor" stroke="none"/>`,
+  signal: `<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M8.6 15.4a5 5 0 010-6.8"/><path d="M15.4 15.4a5 5 0 000-6.8"/><path d="M5.6 18.4a9.5 9.5 0 010-12.8"/><path d="M18.4 18.4a9.5 9.5 0 000-12.8"/>`,
+  check: `<path d="M4 12l5 5L20 6"/>`,
+  cross: `<path d="M5 5l14 14M19 5L5 19"/>`,
+  chevron: `<path d="M6 9l6 6 6-6"/>`,
+  camera: `<path d="M4 8.5A1.5 1.5 0 015.5 7h2l1-1.6h6l1 1.6h2A1.5 1.5 0 0119 8.5v9A1.5 1.5 0 0117.5 19h-13A1.5 1.5 0 013 17.5z"/><circle cx="12" cy="13" r="3.4"/>`,
+  power: `<path d="M12 3v7"/><path d="M6.5 6.6a7.5 7.5 0 1011 0"/>`,
+  search: `<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>`,
+  back: `<path d="M15 6l-6 6 6 6"/>`,
+  eye: `<path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>`,
+  heart: `<path d="M12 20.5s-7.2-4.4-9.7-8.9C0.7 8 1.8 4.2 5.6 4.2c2.1 0 3.6 1.2 4.4 2.6.8-1.4 2.3-2.6 4.4-2.6 3.8 0 4.9 3.8 3.3 7.4-2.5 4.5-9.7 8.9-9.7 8.9z" fill="currentColor" stroke="none"/>`,
+  comment: `<path d="M4.5 5.5h15v10.5H9.5L5 20v-4H4.5z"/>`,
+  share: `<circle cx="18" cy="5" r="2.2"/><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="19" r="2.2"/><path d="M8 10.8l8-4.3M8 13.2l8 4.3"/>`,
+  userplus: `<circle cx="9" cy="9.5" r="3.3"/><path d="M3.2 20c0-3.2 2.6-5.8 5.8-5.8s5.8 2.6 5.8 5.8"/><path d="M18 8.5v4.5M15.8 10.75h4.4"/>`,
+  refresh: `<path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/>`,
+};
+function svgIcon(name, extraAttrs) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" ${extraAttrs||''}>${ICONS[name]}</svg>`;
+}
+
+/* =========================================================================
+   AGENT METADATA
+   ========================================================================= */
+const AGENTS = {
+  dunia_fana: { icon: 'globe',   accent: 'var(--c-fana)',   soft: 'var(--c-fana-soft)',   tag: 'Trivia & Sains' },
+  projc02:    { icon: 'play',    accent: 'var(--c-film)',   soft: 'var(--c-film-soft)',   tag: 'Film' },
+  game001:    { icon: 'gamepad', accent: 'var(--c-game)',   soft: 'var(--c-game-soft)',   tag: 'Game' },
+  angkernyoo: { icon: 'ghost',   accent: 'var(--c-horor)',  soft: 'var(--c-horor-soft)',  tag: 'Horor & Mitos' },
+  terkini:    { icon: 'signal',  accent: 'var(--c-berita)', soft: 'var(--c-berita-soft)', tag: 'Breaking News' },
+};
+function agentOf(id) { return AGENTS[id] || { icon: 'signal', accent: 'var(--paper-dim)', soft: 'var(--hairline-soft)', tag: 'Umum' }; }
+function thumbGradient(agentId, idx) {
+  const a = agentOf(agentId);
+  const angles = [35, 120, 200, 300, 60, 150];
+  const angle = angles[idx % angles.length];
+  return `background:linear-gradient(${angle}deg, ${a.accent}55, ${a.accent}14 60%, #0a0b10);`;
+}
+
+/* =========================================================================
+   MOCK DATA
+   ========================================================================= */
+// PENTING: apiConnected menandai apakah token Instagram Graph API akun ini
+// beneran aktif SEKARANG (bukan cuma pernah dipakai publish). Per catatan
+// terbaru: cuma "terkini" yang tertaut; 4 lainnya belum/sedang tidak
+// terhubung -- usernamenya sengaja TIDAK ditampilkan sampai ini beres,
+// dan tab Insight (yang butuh instagram_manage_insights) ikut nonaktif.
+// Draft/Approve/Riwayat TETAP jalan normal krn itu tidak butuh permission
+// insights, cuma butuh token publish (hal yang beda).
+let MOCK_ACCOUNTS = [
+  { id: 'dunia_fana', displayName: 'dunia_fana___', igUsername: '@dunia_fana___', apiConnected: false, topicLabel: 'Trivia alam, sains, dunia', scheduleTime: '10:45', enabled: true, draftModeEnabled: true, customIcon: null },
+  { id: 'projc02', displayName: 'projc02', igUsername: '@projc02', apiConnected: false, topicLabel: 'Seputar rekomendasi film', scheduleTime: '21:00', enabled: true, draftModeEnabled: true, customIcon: null },
+  { id: 'game001', displayName: 'GAME001', igUsername: '@GAME001', apiConnected: false, topicLabel: 'Rekomendasi game trending & viral', scheduleTime: '20:00', enabled: true, draftModeEnabled: true, customIcon: null },
+  { id: 'angkernyoo', displayName: 'angkernyoo', igUsername: '@angkernyoo', apiConnected: false, topicLabel: 'Makhluk mistis & horor lokal + internasional', scheduleTime: '21:00', enabled: true, draftModeEnabled: true, customIcon: null },
+  { id: 'terkini', displayName: 'terkini', igUsername: '@terkini.id', apiConnected: true, topicLabel: 'Berita trending Indonesia (Google Trends)', scheduleTime: '12:00', enabled: true, draftModeEnabled: true, customIcon: null },
+];
+function igUsernameDisplay(acc) {
+  if (!acc.apiConnected) return `<span class="ig-disconnected">Tidak ada akun tertaut</span>`;
+  // Jaga-jaga: apiConnected=true tapi field igUsername belum diisi di
+  // accounts.json (persis kasus yg kejadian) -- jangan sampai nampilin
+  // "undefined" mentah, kasih pesan yang jelas actionable.
+  if (!acc.igUsername) return `<span class="ig-disconnected">Username belum diisi di accounts.json</span>`;
+  return acc.igUsername;
+}
+let MOCK_DRAFTS = {
+  dunia_fana: null,
+  projc02: { topic: 'Gladiator II', caption: 'Siapa yang udah nungguin momen Lucius masuk ke Colosseum? Gladiator II akhirnya hadir membawa kembali ketegangan dan aksi brutal di arena yang legendaris. Visual pertarungannya gila banget, ditambah akting dari Paul Mescal, Denzel Washington, dan Pedro Pascal.\n\n#GladiatorII #RidleyScott #FilmAction', createdAt: new Date().toISOString(), slideCount: 3 },
+  game001: null,
+  angkernyoo: { topic: 'Cthulhu', caption: 'Mungkin kita merasa bahwa samudra adalah tempat yang sudah tereksplorasi sepenuhnya, namun di kedalaman yang paling gelap, ada sesuatu yang sedang menunggu dalam tidurnya. Cthulhu bukan sekadar monster laut, ia adalah perwujudan dari ketakutan akan hal yang tidak diketahui.\n\n#Cthulhu #Lovecraftian #HororKosmik', createdAt: new Date().toISOString(), slideCount: 4 },
+  terkini: { topic: 'Adilson Maringa', caption: 'Kabar membanggakan datang dari mantan penjaga gawang yang pernah berkarier di Liga Indonesia, Adilson Maringa. Ia resmi tampil di kompetisi UEFA Conference League di Eropa.\n\n#AdilsonMaringa #BreakingNews', createdAt: new Date().toISOString(), slideCount: 1 },
+};
+const UPLOAD_HISTORY_BANK = {
+  dunia_fana: [ ['Fenomena kawanan kuda nil keluar dari air di malam hari',1], ['Danau Hillier di Australia yang airnya berwarna pink',4], ['Mimikri gurita penyamar (mimic octopus)',7], ['Aurora borealis dan medan magnet bumi',11], ['Kenapa langit berwarna biru saat siang',15], ['Fenomena bioluminesensi plankton di pantai',19] ],
+  projc02: [ ['Dune: Part Three',2], ['Deadpool & Wolverine',6], ['The Batman Part II',9], ['Kumpulan film time loop terbaik',13], ['Oppenheimer',18] ],
+  game001: [ ['Elden Ring: Nightreign',1], ['Hollow Knight: Silksong',5], ['GTA VI',8], ['Kumpulan game indie 2026 wajib coba',12] ],
+  angkernyoo: [ ['Kuntilanak',2], ['Genderuwo',6], ['Slender Man',10], ['Pocong',14] ],
+  terkini: [ ['Adilson Maringa cetak sejarah di Eropa',0], ['Timnas Indonesia lolos putaran ketiga',3], ['Gempa magnitudo 5.4 guncang Jawa Barat',5] ],
+};
+function uploadHistoryFor(id) {
+  const bank = UPLOAD_HISTORY_BANK[id] || [];
+  return bank.map(([topic, daysAgo], i) => {
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    return { topic, date: toLocalDateKey(d), daysAgo, idx: i };
+  });
+}
+function daysAgoKey(n) { const d = new Date(); d.setDate(d.getDate() - n); return toLocalDateKey(d); }
+
+/* =========================================================================
+   INSIGHT DATA -- mockInsightsCacheFor() bentuknya PERSIS SAMA dengan
+   respons asli /api/accounts/:id/insights (hasil sync-insights.js), cuma
+   dipakai kalau MODE DEMO (server asli tidak terjangkau). Field yang
+   ditampilkan cuma yang diminta: likes, comments, shares, views, reach,
+   followsFromPost -- TIDAK ada demografi/usia, sengaja dilepas.
+   ========================================================================= */
+function seededRnd(seedStr) {
+  let seed = 0;
+  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+  return function () { seed = (seed * 1103515245 + 12345) >>> 0; return (seed % 10000) / 10000; };
+}
+function fmtNum(n) { return (n === null || n === undefined) ? '—' : Math.round(n).toLocaleString('id-ID'); }
+function mockInsightsCacheFor(accountId) {
+  const posts = uploadHistoryFor(accountId).map((h) => {
+    const rnd = seededRnd(accountId + '-post-' + h.topic);
+    const reach = Math.round(400 + rnd() * 5000);
+    return {
+      postId: 'mock-' + h.idx,
+      topic: h.topic,
+      timestamp: new Date(Date.now() - h.daysAgo * 86400000).toISOString(),
+      reach,
+      views: Math.round(reach * (1.1 + rnd() * 0.6)),
+      shares: Math.round(reach * (0.005 + rnd() * 0.02)),
+      likes: Math.round(reach * (0.03 + rnd() * 0.08)),
+      comments: Math.round(reach * (0.002 + rnd() * 0.01)),
+      followsFromPost: Math.round(rnd() * 3),
+    };
+  });
+  return { available: true, accountId, syncedAt: new Date().toISOString(), posts };
+}
+function mockHistoryFor(id) {
+  const hist = uploadHistoryFor(id);
+  const rows = hist.slice(0, 6).map(h => ({ date: h.date, time: '20:00', stage: 'publish', status: 'success', topic: h.topic }));
+  rows.unshift({ date: daysAgoKey(0), time: '--', stage: MOCK_DRAFTS[id] ? 'draft_ready' : 'none', status: 'success', topic: MOCK_DRAFTS[id] ? MOCK_DRAFTS[id].topic : null });
+  return rows;
+}
+
+/* =========================================================================
+   API LAYER
+   ========================================================================= */
+let DEMO_MODE = null;
+async function fetchWithTimeout(url, opts = {}, ms = 1400) {
+  const controller = new AbortController(); const t = setTimeout(() => controller.abort(), ms);
+  try { const res = await fetch(url, { ...opts, signal: controller.signal }); clearTimeout(t); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
+  catch (e) { clearTimeout(t); throw e; }
+}
+async function detectMode() {
+  if (DEMO_MODE !== null) return DEMO_MODE;
+  try { await fetchWithTimeout('/api/accounts', {}, 1400); DEMO_MODE = false; } catch (e) { DEMO_MODE = true; }
+  const slot = document.getElementById('demoPillSlot');
+  if (slot) { slot.textContent = DEMO_MODE ? 'MODE DEMO' : 'LIVE'; slot.classList.toggle('live', !DEMO_MODE); }
+  return DEMO_MODE;
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function apiGetAccounts() {
+  if (await detectMode()) return MOCK_ACCOUNTS.map(a => ({ ...a, status: MOCK_DRAFTS[a.id] ? 'draft' : (a._done ? 'done' : 'standby') }));
+  return fetchWithTimeout('/api/accounts');
+}
+async function apiGetStatus(id) {
+  if (await detectMode()) return { history: mockHistoryFor(id), todayCompleted: false, today: daysAgoKey(0) };
+  return fetchWithTimeout('/api/status/' + id);
+}
+async function apiGetDraft(id) {
+  if (await detectMode()) {
+    const d = MOCK_DRAFTS[id];
+    if (!d) return { status: 'standby', draft: null };
+    const imageUrls = Array.from({ length: d.slideCount }, (_, i) => 'placeholder://' + id + '/' + i);
+    return { status: 'draft', draft: { topic: d.topic, caption: d.caption, createdAt: d.createdAt, imageUrls } };
+  }
+  return fetchWithTimeout('/api/accounts/' + id + '/draft');
+}
+async function apiToggle(id) {
+  if (await detectMode()) { const acc = MOCK_ACCOUNTS.find(a => a.id === id); acc.enabled = !acc.enabled; await sleep(200); return acc; }
+  const res = await fetch(`/api/accounts/${id}/toggle`, { method: 'POST' }); return res.json();
+}
+async function apiDraftModeToggle(id) {
+  if (await detectMode()) { const acc = MOCK_ACCOUNTS.find(a => a.id === id); acc.draftModeEnabled = !acc.draftModeEnabled; await sleep(200); return acc; }
+  const res = await fetch(`/api/accounts/${id}/draftmode/toggle`, { method: 'POST' }); return res.json();
+}
+async function apiSaveSchedule(id, time) {
+  if (await detectMode()) { const acc = MOCK_ACCOUNTS.find(a => a.id === id); acc.scheduleTime = time; await sleep(350); return { success: true, account: acc }; }
+  const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 10000);
+  try { const res = await fetch(`/api/accounts/${id}/schedule`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ time }), signal: controller.signal }); clearTimeout(timeoutId); return await res.json(); }
+  catch (err) { clearTimeout(timeoutId); throw err; }
+}
+async function apiApprove(id) {
+  if (await detectMode()) {
+    await sleep(700);
+    const topic = MOCK_DRAFTS[id] ? MOCK_DRAFTS[id].topic : null;
+    MOCK_DRAFTS[id] = null;
+    MOCK_ACCOUNTS.find(a => a.id === id)._done = true;
+    if (topic) UPLOAD_HISTORY_BANK[id] = [[topic, 0], ...(UPLOAD_HISTORY_BANK[id] || [])];
+    return { success: true };
+  }
+  const res = await fetch(`/api/accounts/${id}/draft/approve`, { method: 'POST' }); return res.json();
+}
+async function apiReject(id) {
+  if (await detectMode()) { await sleep(300); MOCK_DRAFTS[id] = null; return { success: true }; }
+  const res = await fetch(`/api/accounts/${id}/draft/reject`, { method: 'POST' }); return res.json();
+}
+// Upload/hapus foto unit -- mode demo TIDAK kirim ke server sama sekali
+// (tidak permanen, cuma preview base64 di memori), mode live beneran
+// nyimpen ke disk lewat endpoint baru di server.js.
+async function apiUploadIcon(id, dataUrl) {
+  if (await detectMode()) { await sleep(300); return { success: true, iconUrl: null }; }
+  const res = await fetch(`/api/accounts/${id}/icon`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }),
+  });
+  return res.json();
+}
+async function apiRemoveIcon(id) {
+  if (await detectMode()) { await sleep(200); return { success: true }; }
+  const res = await fetch(`/api/accounts/${id}/icon`, { method: 'DELETE' });
+  return res.json();
+}
+// FANA Poller (Windows Task Scheduler) -- TIDAK ADA hubungan dgn demo-pill
+// LIVE/MODE DEMO di atas (itu cuma soal koneksi dashboard<->server). Ini
+// status jadwal automasi yang sungguhan.
+let MOCK_POLLER_ENABLED = true;
+async function apiGetPollerStatus() {
+  if (await detectMode()) { await sleep(150); return { state: MOCK_POLLER_ENABLED ? 'Ready' : 'Disabled', enabled: MOCK_POLLER_ENABLED }; }
+  try { return await fetchWithTimeout('/api/poller/status'); }
+  catch (err) { return { enabled: null, error: err.message }; }
+}
+async function apiTogglePoller() {
+  if (await detectMode()) {
+    await sleep(300);
+    MOCK_POLLER_ENABLED = !MOCK_POLLER_ENABLED;
+    return { success: true, enabled: MOCK_POLLER_ENABLED, state: MOCK_POLLER_ENABLED ? 'Ready' : 'Disabled' };
+  }
+  try {
+    const res = await fetch('/api/poller/toggle', { method: 'POST' });
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+// Insight -- baca dari cache (sync-insights.js), BUKAN manggil Instagram
+// langsung dari browser. Bentuk respons { available, accountId, syncedAt,
+// posts:[...] } SAMA PERSIS baik mode demo maupun live, biar render-nya
+// tidak perlu tahu bedanya.
+async function apiGetInsights(id) {
+  if (await detectMode()) { await sleep(150); return mockInsightsCacheFor(id); }
+  try {
+    return await fetchWithTimeout('/api/accounts/' + id + '/insights');
+  } catch (err) {
+    return { available: false, reason: 'Gagal terhubung ke server: ' + err.message };
+  }
+}
+// Trigger sync-insights.js dari tombol "Scan Insight". Timeout LEBIH
+// PANJANG dari fetch biasa (130 detik, bukan 1.4 detik) -- ini beneran
+// manggil Instagram Graph API berkali-kali di sisi server, bukan operasi
+// file instan seperti endpoint lain.
+async function apiSyncInsights() {
+  if (await detectMode()) { await sleep(1200); return { success: true }; }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 130000);
+  try {
+    const res = await fetch('/api/insights/sync', { method: 'POST', signal: controller.signal });
+    clearTimeout(timeoutId);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    return { success: false, error: err.name === 'AbortError' ? 'Timeout -- proses sync terlalu lama (>2 menit).' : err.message };
+  }
+}
+function toLocalDateKey(d) { const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; }
+
+/* =========================================================================
+   UTIL
+   ========================================================================= */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
+}
+const HARI_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function tickClock() {
+  const el = document.getElementById('liveClock');
+  const d = new Date();
+  el.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+  // Label "WIB" cuma penanda zona -- diasumsikan jam sistem device sudah
+  // WIB (lazim utk device di Indonesia). TIDAK menambah offset +7 manual,
+  // supaya tidak dobel-geser kalau sistemnya memang sudah WIB.
+  const dateEl = document.getElementById('dateLabel');
+  if (dateEl) dateEl.textContent = `${HARI_ID[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}`;
+}
+function runBoot() {
+  const overlay = document.getElementById('bootOverlay');
+  const dismiss = () => overlay.classList.add('hide');
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 1000);
+}
+document.getElementById('searchIconSlot').innerHTML = svgIcon('search');
+
+/* =========================================================================
+   ICON BADGE + UPLOAD
+   ========================================================================= */
+let _iconEditingId = null;
+const iconFileInput = document.getElementById('iconFileInput');
+function iconBadgeHtml(acc, size) {
+  const agent = agentOf(acc.id);
+  const sizeStyle = `width:${size}px;height:${size}px;`;
+  // iconUrl = foto PERMANEN tersimpan di server (accounts.json + disk).
+  // customIcon = base64 di memori browser -- cuma dipakai preview instan
+  // pas lagi upload, atau fallback di mode demo (server tidak ada).
+  // Cache-bust pakai timestamp render supaya foto baru langsung kepakai,
+  // bukan versi lama yang ke-cache browser.
+  const photoUrl = acc.iconUrl ? (acc.iconUrl + '?t=' + Date.now()) : acc.customIcon;
+  if (photoUrl) {
+    return `<div class="icon-badge has-photo" style="${sizeStyle}background-image:url('${photoUrl}');" data-icon-edit="${acc.id}">
+      <div class="icon-edit-overlay" data-icon-edit="${acc.id}">${svgIcon('camera', 'width="14" height="14"')}</div>
+      <span class="icon-remove" role="button" tabindex="0" data-icon-remove="${acc.id}" title="Hapus foto" aria-label="Hapus foto">&times;</span>
+    </div>`;
+  }
+  return `<div class="icon-badge" style="${sizeStyle}background:${agent.soft};color:${agent.accent};" data-icon-edit="${acc.id}">
+    ${svgIcon(agent.icon)}
+    <div class="icon-edit-overlay" data-icon-edit="${acc.id}">${svgIcon('camera', 'width="14" height="14"')}</div>
+  </div>`;
+}
+function refreshIconViews(accountId) {
+  renderRosterGrid(); renderQueueStrip();
+  if (currentUnitId === accountId) renderDetail(accountId);
+}
+function bindIconBadgeEvents(root) {
+  root.querySelectorAll('[data-icon-edit]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); _iconEditingId = el.dataset.iconEdit; iconFileInput.value = ''; iconFileInput.click(); }));
+  root.querySelectorAll('[data-icon-remove]').forEach(el => el.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const acc = ACCOUNTS.find(a => a.id === el.dataset.iconRemove);
+    if (!acc) return;
+    showToast('Menghapus foto...');
+    try {
+      const result = await apiRemoveIcon(acc.id);
+      if (result.success) {
+        acc.customIcon = null; acc.iconUrl = null;
+        refreshIconViews(acc.id);
+        showToast('Foto unit dihapus.');
+      } else {
+        showToast('\u2715 Gagal hapus foto: ' + (result.error || 'unknown'));
+      }
+    } catch (err) {
+      showToast('\u2715 Gagal hapus foto: ' + err.message);
+    }
+  }));
+}
+iconFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file || !_iconEditingId) return;
+  if (!file.type.startsWith('image/')) { showToast('File harus berupa gambar'); return; }
+  const accountId = _iconEditingId;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const acc = ACCOUNTS.find(a => a.id === accountId);
+    if (!acc) return;
+    // Preview instan pakai base64 di memori DULU (biar terasa langsung
+    // responsif), BARU kirim ke server buat disimpan permanen.
+    acc.customIcon = reader.result;
+    refreshIconViews(accountId);
+    showToast('Mengupload foto...');
+    try {
+      const result = await apiUploadIcon(accountId, reader.result);
+      if (result.success) {
+        if (result.iconUrl) acc.iconUrl = result.iconUrl; // mode live: path permanen dari server
+        refreshIconViews(accountId);
+        showToast(result.iconUrl ? '\u2713 Foto unit tersimpan permanen.' : 'Foto unit diperbarui (mode demo, tidak permanen).');
+      } else {
+        showToast('\u2715 Gagal upload: ' + (result.error || 'unknown'));
+      }
+    } catch (err) {
+      showToast('\u2715 Gagal upload: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+/* =========================================================================
+   POWER TOGGLE
+   ========================================================================= */
+function powerToggleHtml(acc, extraClass) {
+  return `<button type="button" class="power-toggle ${acc.enabled ? 'on' : ''} ${extraClass||''}" data-power="${acc.id}" aria-pressed="${acc.enabled}" title="${acc.enabled ? 'Matikan unit' : 'Aktifkan unit'}">${svgIcon('power', 'width="15" height="15"')}<span class="power-ring"></span></button>`;
+}
+function bindPowerToggleEvents(root) {
+  root.querySelectorAll('[data-power]').forEach(btn => btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 650);
+    const id = btn.dataset.power;
+    const updated = await apiToggle(id);
+    const acc = ACCOUNTS.find(a => a.id === id);
+    Object.assign(acc, updated);
+    renderHealth(); renderRosterGrid();
+    if (currentUnitId === id) renderDetail(id);
+    showToast(acc.enabled ? `${acc.displayName} diaktifkan` : `${acc.displayName} dinonaktifkan`);
+  }));
+}
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+let ACCOUNTS = [];
+let STATUS_BY_ID = {};
+let currentUnitId = null;
+let searchQuery = '';
+
+async function loadAll() {
+  ACCOUNTS = await apiGetAccounts();
+  const statusResults = await Promise.all(ACCOUNTS.map(a => apiGetStatus(a.id)));
+  ACCOUNTS.forEach((a, i) => { STATUS_BY_ID[a.id] = statusResults[i]; });
+  document.getElementById('unitLive').textContent = ACCOUNTS.length + ' unit';
+  loadPollerStatus();
+  renderHealth();
+  renderQueueStrip();
+  renderRosterGrid();
+  applySearchFilter();
+}
+
+function renderHealth() {
+  const active = ACCOUNTS.filter(a => a.enabled).length;
+  const pct = Math.round((active / ACCOUNTS.length) * 100);
+  document.getElementById('healthFill').style.width = pct + '%';
+  document.getElementById('healthText').innerHTML = `<strong>${active}/${ACCOUNTS.length}</strong> unit aktif &middot; <strong>${pct}%</strong> kapasitas siaran`;
+}
+
+/* =========================================================================
+   QUEUE STRIP
+   ========================================================================= */
+async function renderQueueStrip() {
+  const drafts = ACCOUNTS.filter(a => a.status === 'draft');
+  const section = document.getElementById('queueSection');
+  const strip = document.getElementById('queueStrip');
+  document.getElementById('queueCount').textContent = drafts.length;
+  if (drafts.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // FIX: sebelumnya topik chip diambil langsung dari MOCK_DRAFTS (data
+  // contoh statis: "Gladiator II" dkk), jadi tidak pernah update walau
+  // draft asli sudah beda. Sekarang manggil apiGetDraft() yang sama persis
+  // dipakai panel Approve -- otomatis draft ASLI di mode live, mock yang
+  // benar di mode demo.
+  const draftDataList = await Promise.all(drafts.map(acc => apiGetDraft(acc.id)));
+
+  strip.innerHTML = drafts.map((acc, i) => {
+    const agent = agentOf(acc.id);
+    const draftData = draftDataList[i];
+    const topic = (draftData && draftData.draft && draftData.draft.topic) ? draftData.draft.topic : acc.topicLabel;
+    return `<button type="button" class="queue-chip" data-id="${acc.id}">
+      ${iconBadgeHtml(acc, 38)}
+      <div><div class="chip-name">${acc.displayName}</div><div class="chip-topic">${topic}</div></div>
+      <span class="chip-arrow">${svgIcon('chevron')}</span>
+    </button>`;
+  }).join('');
+  bindIconBadgeEvents(strip);
+  strip.querySelectorAll('.queue-chip').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      if (e.target.closest('[data-icon-edit]') || e.target.closest('[data-icon-remove]')) return;
+      openDetail(chip.dataset.id, chip);
+    });
+  });
+}
+
+/* =========================================================================
+   ROSTER GRID (square unit cards)
+   ========================================================================= */
+function unitCardHtml(acc, i) {
+  const agent = agentOf(acc.id);
+  const statusText = { standby: 'STANDBY', draft: 'DRAFT', done: 'DONE' }[acc.status] || acc.status;
+  return `
+    <div class="unit-card${acc.enabled ? '' : ' is-off'}" data-id="${acc.id}" tabindex="0" role="button" aria-label="Buka unit ${acc.displayName}" style="animation: riseIn .45s var(--ease) ${0.035 * i}s both;">
+      <div class="unit-card-top">
+        ${iconBadgeHtml(acc, 50)}
+        ${powerToggleHtml(acc)}
+      </div>
+      <div class="unit-card-body">
+        <div class="unit-name">${acc.displayName}</div>
+        <div class="unit-handle">${igUsernameDisplay(acc)}</div>
+        <span class="unit-tag" style="background:${agent.soft};color:${agent.accent};">${agent.tag}</span>
+      </div>
+      <div class="unit-card-foot">
+        <span class="tally ${acc.status === 'draft' ? 'draft' : (acc.status === 'done' ? 'done' : '')}"></span>
+        <span class="unit-status-text">${statusText}${acc.enabled ? '' : ' &middot; OFF'}</span>
+      </div>
+    </div>`;
+}
+
+// Unit AKTIF selalu tampil duluan (urutan asli accounts.json dijaga di
+// dalam masing-masing grup); unit NONAKTIF otomatis digeser ke akhir
+// urutan -- karena grid mengalir kiri->kanan lalu turun baris, ini secara
+// visual = unit mati bergeser ke kanan, lalu ke kanan-bawah kalau makin
+// banyak yang mati, PERSIS seperti yang diminta, tanpa perlu koordinat
+// manual. Posisi lama tiap kartu direkam dulu (FLIP: First/Last/Invert/
+// Play) supaya perpindahannya kelihatan geser mulus, bukan lompat.
+function renderRosterGrid() {
+  const grid = document.getElementById('rosterGrid');
+
+  const oldRects = {};
+  grid.querySelectorAll('.unit-card').forEach(card => { oldRects[card.dataset.id] = card.getBoundingClientRect(); });
+
+  const sorted = [...ACCOUNTS].sort((a, b) => (a.enabled === b.enabled) ? 0 : (a.enabled ? -1 : 1));
+  grid.innerHTML = sorted.map((acc, i) => unitCardHtml(acc, i)).join('');
+
+  bindIconBadgeEvents(grid);
+  bindPowerToggleEvents(grid);
+  grid.querySelectorAll('.unit-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-icon-edit]') || e.target.closest('[data-icon-remove]') || e.target.closest('[data-power]')) return;
+      openDetail(card.dataset.id, card);
+    });
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(card.dataset.id, card); } });
+
+    // FLIP: kalau kartu ini sudah ada sebelumnya (bukan render pertama),
+    // "invert" ke posisi lama dulu tanpa transisi, lalu di frame berikut
+    // lepas ke posisi baru DENGAN transisi -- hasilnya keliatan geser.
+    const oldRect = oldRects[card.dataset.id];
+    if (oldRect) {
+      const newRect = card.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left;
+      const dy = oldRect.top - newRect.top;
+      if (dx || dy) {
+        card.style.transition = 'none';
+        card.style.transform = `translate(${dx}px, ${dy}px)`;
+        void card.offsetWidth;
+        requestAnimationFrame(() => {
+          card.style.transition = 'transform 0.5s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), filter 0.3s var(--ease), opacity 0.3s var(--ease)';
+          card.style.transform = '';
+        });
+      }
+    }
+  });
+  applySearchFilter();
+}
+
+function applySearchFilter() {
+  const q = searchQuery.toLowerCase();
+  let anyVisible = false;
+  document.querySelectorAll('.unit-card').forEach(card => {
+    const acc = ACCOUNTS.find(a => a.id === card.dataset.id);
+    if (!acc) return;
+    const agent = agentOf(acc.id);
+    const haystack = `${acc.displayName} ${acc.igUsername} ${acc.topicLabel} ${agent.tag}`.toLowerCase();
+    const match = !q || haystack.includes(q);
+    if (match) {
+      anyVisible = true;
+      card.style.display = '';
+      requestAnimationFrame(() => { card.style.opacity = '1'; card.style.transform = ''; });
+    } else {
+      card.style.opacity = '0'; card.style.transform = 'scale(0.85)';
+      setTimeout(() => { if (card.style.opacity === '0') card.style.display = 'none'; }, 200);
+    }
+  });
+  document.getElementById('emptySearchState').style.display = (q && !anyVisible) ? 'block' : 'none';
+}
+document.getElementById('searchInput').addEventListener('input', (e) => { searchQuery = e.target.value.trim(); applySearchFilter(); });
+
+/* =========================================================================
+   FANA POLLER CONTROL (Windows Task Scheduler enable/disable)
+   ========================================================================= */
+function renderPollerControl(status) {
+  const pill = document.getElementById('pollerStatusPill');
+  const toggle = document.getElementById('pollerToggle');
+  if (status.enabled === null || status.enabled === undefined) {
+    pill.textContent = 'POLLER: ?';
+    pill.className = 'poller-status-pill unknown';
+    toggle.classList.remove('on');
+    toggle.setAttribute('aria-checked', 'false');
+    toggle.title = 'Status FANA Poller tidak diketahui' + (status.error ? ' (' + status.error + ')' : '');
+    return;
+  }
+  pill.textContent = status.enabled ? 'POLLER: LIVE' : 'POLLER: OFFLINE';
+  pill.className = 'poller-status-pill ' + (status.enabled ? 'on' : 'off');
+  toggle.classList.toggle('on', status.enabled);
+  toggle.setAttribute('aria-checked', String(status.enabled));
+  toggle.title = status.enabled ? 'Nonaktifkan FANA Poller' : 'Aktifkan FANA Poller';
+}
+
+async function loadPollerStatus() {
+  const status = await apiGetPollerStatus();
+  renderPollerControl(status);
+}
+
+async function togglePoller() {
+  const toggle = document.getElementById('pollerToggle');
+  toggle.title = 'Memproses...';
+  showToast('Mengubah status FANA Poller...');
+  const result = await apiTogglePoller();
+  if (result && result.success !== false && typeof result.enabled === 'boolean') {
+    renderPollerControl(result);
+    showToast(result.enabled ? '\u2713 FANA Poller diaktifkan.' : 'FANA Poller dinonaktifkan.');
+  } else {
+    showToast('\u2715 Gagal ubah status FANA Poller: ' + ((result && result.error) || 'unknown error'));
+    loadPollerStatus(); // tarik ulang status asli, jangan biarkan UI nyasar
+  }
+}
+document.getElementById('pollerToggle').addEventListener('click', togglePoller);
+document.getElementById('pollerToggle').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePoller(); }
+});
+
+
+/* =========================================================================
+   DETAIL VIEW (shared-element / FLIP transition)
+   ========================================================================= */
+function openDetail(accountId, originEl) {
+  currentUnitId = accountId;
+  const detail = document.getElementById('detailView');
+  const rect = originEl.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scaleX = Math.max(rect.width / vw, 0.05);
+  const scaleY = Math.max(rect.height / vh, 0.05);
+  const tx = rect.left + rect.width / 2 - vw / 2;
+  const ty = rect.top + rect.height / 2 - vh / 2;
+
+  renderDetail(accountId);
+  detail.style.display = 'block';
+  detail.scrollTop = 0;
+  detail.style.transition = 'none';
+  detail.style.transformOrigin = 'center';
+  detail.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+  detail.style.opacity = '0.5';
+  detail.style.borderRadius = '16px';
+  void detail.offsetWidth;
+  document.getElementById('gridWrap').classList.add('behind');
+  requestAnimationFrame(() => {
+    detail.style.transition = 'transform 0.55s var(--ease), opacity 0.4s var(--ease), border-radius 0.55s var(--ease)';
+    detail.style.transform = 'translate(0,0) scale(1,1)';
+    detail.style.opacity = '1';
+    detail.style.borderRadius = '0px';
+  });
+}
+
+function closeDetail() {
+  const detail = document.getElementById('detailView');
+  const cardEl = document.querySelector(`.unit-card[data-id="${currentUnitId}"]`) || document.querySelector(`.queue-chip[data-id="${currentUnitId}"]`);
+  document.getElementById('gridWrap').classList.remove('behind');
+  if (cardEl) {
+    const rect = cardEl.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const scaleX = rect.width / vw, scaleY = rect.height / vh;
+    const tx = rect.left + rect.width / 2 - vw / 2;
+    const ty = rect.top + rect.height / 2 - vh / 2;
+    detail.style.transition = 'transform 0.5s var(--ease), opacity 0.4s var(--ease), border-radius 0.5s var(--ease)';
+    detail.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+    detail.style.opacity = '0.2';
+    detail.style.borderRadius = '16px';
+  } else {
+    detail.style.transition = 'transform 0.4s var(--ease), opacity 0.4s var(--ease)';
+    detail.style.transform = 'scale(0.9)';
+    detail.style.opacity = '0';
+  }
+  setTimeout(() => {
+    detail.style.display = 'none';
+    detail.style.transition = 'none';
+    detail.style.transform = '';
+    detail.style.opacity = '';
+    detail.innerHTML = '';
+    currentUnitId = null;
+  }, 520);
+}
+
+function renderDetail(accountId) {
+  const acc = ACCOUNTS.find(a => a.id === accountId);
+  const agent = agentOf(accountId);
+  const status = STATUS_BY_ID[accountId] || { history: [] };
+  const detail = document.getElementById('detailView');
+
+  detail.innerHTML = `
+    <div class="detail-inner">
+      <button type="button" class="back-btn" id="backBtn">${svgIcon('back')} Semua Unit</button>
+      <div class="detail-id-row">
+        ${iconBadgeHtml(acc, 64)}
+        <div>
+          <div class="detail-name serif">${acc.displayName}</div>
+          <div class="detail-handle">${igUsernameDisplay(acc)} &middot; <span class="unit-tag" style="background:${agent.soft};color:${agent.accent};">${agent.tag}</span></div>
+        </div>
+        ${powerToggleHtml(acc, 'detail-power')}
+      </div>
+      <p class="detail-desc">${acc.topicLabel}</p>
+
+      <div class="detail-quick-settings">
+        <div class="qs-col">
+          <div class="qs-label">JAM POSTING</div>
+          <div class="qs-item"><input type="time" value="${acc.scheduleTime}" id="timeInput"><button class="btn small" id="saveScheduleBtn">Simpan</button></div>
+        </div>
+        <div class="qs-col">
+          <div class="qs-label">MODE DRAFT</div>
+          <div class="qs-item"><div class="toggle ${acc.draftModeEnabled ? 'on' : ''}" id="draftToggle" role="switch" tabindex="0"><div class="toggle-knob"></div></div>
+          <span class="toggle-text">${acc.draftModeEnabled ? '<strong>ON</strong>' : '<strong>OFF</strong>'}</span></div>
+        </div>
+      </div>
+
+      <div class="detail-nav-pills">
+        <button type="button" class="nav-pill active" data-target="secApprove">Draft</button>
+        <button type="button" class="nav-pill" data-target="secHistory">Riwayat</button>
+        <button type="button" class="nav-pill" data-target="secInsight">Insight</button>
+      </div>
+
+      <section class="detail-section" id="secApprove">
+        <div class="detail-section-title">Draft Menunggu Review</div>
+        <div id="approveBody">Memuat&hellip;</div>
+      </section>
+
+      <section class="detail-section" id="secHistory">
+        <div class="detail-section-title">Riwayat Unggahan</div>
+        <div class="history-grid" id="historyGrid"></div>
+      </section>
+
+      <section class="detail-section" id="secInsight">
+        <div class="detail-section-title">Insight</div>
+        <div id="insightBody"></div>
+      </section>
+    </div>
+  `;
+
+  bindIconBadgeEvents(detail);
+  bindPowerToggleEvents(detail);
+  document.getElementById('backBtn').addEventListener('click', closeDetail);
+
+  document.getElementById('draftToggle').addEventListener('click', async () => {
+    const updated = await apiDraftModeToggle(accountId);
+    Object.assign(acc, updated);
+    showToast(acc.draftModeEnabled ? 'Mode draft: ON' : 'Mode draft: OFF (auto-publish)');
+    renderDetail(accountId);
+  });
+  document.getElementById('saveScheduleBtn').addEventListener('click', async () => {
+    const input = document.getElementById('timeInput');
+    showToast('Menyimpan jadwal...');
+    try {
+      const result = await apiSaveSchedule(accountId, input.value);
+      acc.scheduleTime = input.value;
+      showToast(result.error ? '\u26A0 ' + result.error : '\u2713 Jadwal disimpan: ' + input.value);
+    } catch (err) { showToast(err.name === 'AbortError' ? '\u2715 Server tidak merespons.' : '\u2715 Gagal: ' + err.message); }
+  });
+
+  renderApproveSection(accountId);
+  renderHistorySection(accountId);
+  renderInsightSection(accountId);
+  setupScrollSpy(detail);
+
+  detail.querySelectorAll('.nav-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const target = document.getElementById(pill.dataset.target);
+      if (target) detail.scrollTo({ top: target.offsetTop - 8, behavior: 'smooth' });
+    });
+  });
+}
+
+async function renderApproveSection(accountId) {
+  const body = document.getElementById('approveBody');
+  if (!body) return;
+  const data = await apiGetDraft(accountId);
+  if (data.status !== 'draft' || !data.draft) {
+    body.innerHTML = `<div class="empty-approve">Tidak ada draft yang menunggu review saat ini. Unit ini akan generate draft baru sesuai jam posting yang dijadwalkan.</div>`;
+    return;
+  }
+  const d = data.draft;
+  const thumbsHtml = d.imageUrls.map((u, i) => {
+    const isReal = !u.startsWith('placeholder://');
+    const inner = isReal ? `<img src="${u}?t=${Date.now()}" alt="slide">` : `<div style="width:100%;height:100%;${thumbGradient(accountId, i)}"></div>`;
+    return `<div class="thumb">${inner}<span class="thumb-tag">${i + 1}/${d.imageUrls.length}</span></div>`;
+  }).join('');
+  body.innerHTML = `
+    <p class="draft-topic">${d.topic}</p>
+    <div class="thumb-row">${thumbsHtml}</div>
+    <div class="draft-caption">${d.caption}</div>
+    <div class="draft-actions">
+      <button class="btn approve" id="approveBtn">${svgIcon('check', 'width="15" height="15"')} Publikasikan</button>
+      <button class="btn reject" id="rejectBtn">${svgIcon('cross', 'width="15" height="15"')} Batal &amp; Tolak</button>
+    </div>
+  `;
+  document.getElementById('approveBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true; btn.innerHTML = `${svgIcon('check', 'width="15" height="15"')} Mempublikasikan&hellip;`;
+    showToast('Mempublikasikan draft...');
+    try {
+      const result = await apiApprove(accountId);
+      showToast(result.success ? '\u2713 Berhasil dipublikasikan' : '\u2715 Gagal: ' + (result.error || 'unknown'));
+      await refreshAfterAction(accountId);
+    } catch (err) { showToast('\u2715 Gagal terhubung ke server: ' + err.message); }
+  });
+  document.getElementById('rejectBtn').addEventListener('click', async () => {
+    if (!confirm('Buang draft ini? Tidak akan dipublish, dan tidak dibuat ulang otomatis hari ini.')) return;
+    const result = await apiReject(accountId);
+    showToast(result.success ? 'Draft dibuang.' : '\u2715 Gagal: ' + result.error);
+    await refreshAfterAction(accountId);
+  });
+}
+
+async function refreshAfterAction(accountId) {
+  ACCOUNTS = await apiGetAccounts();
+  const statusResults = await Promise.all(ACCOUNTS.map(a => apiGetStatus(a.id)));
+  ACCOUNTS.forEach((a, i) => { STATUS_BY_ID[a.id] = statusResults[i]; });
+  renderHealth(); renderQueueStrip(); renderRosterGrid();
+  if (currentUnitId === accountId) renderDetail(accountId);
+}
+
+function renderHistorySection(accountId) {
+  const grid = document.getElementById('historyGrid');
+  if (!grid) return;
+  const hist = uploadHistoryFor(accountId);
+  if (hist.length === 0) { grid.innerHTML = '<div class="empty-hint">Belum ada riwayat unggahan.</div>'; return; }
+  grid.innerHTML = hist.map((h, i) => `
+    <div class="history-card">
+      <div class="history-thumb" style="${thumbGradient(accountId, i)}"></div>
+      <div class="history-meta">
+        <p class="history-topic" title="${h.topic}">${h.topic}</p>
+        <div class="history-date">${h.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function scanInsightBtnHtml() {
+  return `<button type="button" class="btn small" id="scanInsightBtn" title="Melakukan Sync">${svgIcon('refresh', 'width="13" height="13"')} Scan Insight</button>`;
+}
+function bindScanInsightBtn(accountId) {
+  const btn = document.getElementById('scanInsightBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.innerHTML = `${svgIcon('refresh', 'width="13" height="13"')} Menyinkronkan&hellip;`;
+    showToast('Melakukan sync ke Instagram, mohon tunggu (bisa sampai 1-2 menit)...');
+    try {
+      const result = await apiSyncInsights();
+      if (result.success) {
+        showToast('\u2713 Sync selesai.');
+        renderInsightSection(accountId); // render ulang total dgn data segar
+      } else {
+        showToast('\u2715 Sync gagal: ' + (result.error || 'unknown error'));
+        btn.disabled = false;
+        btn.innerHTML = `${svgIcon('refresh', 'width="13" height="13"')} Scan Insight`;
+      }
+    } catch (err) {
+      showToast('\u2715 Sync gagal: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = `${svgIcon('refresh', 'width="13" height="13"')} Scan Insight`;
+    }
+  });
+}
+
+function renderInsightSection(accountId) {
+  const body = document.getElementById('insightBody');
+  if (!body) return;
+  const acc = ACCOUNTS.find(a => a.id === accountId);
+
+  if (!acc.apiConnected) {
+    body.innerHTML = `<div class="insight-disabled">
+      <strong>Insight belum tersedia</strong> — akun Instagram unit ini belum tertaut ke API
+      (butuh permission <code>instagram_manage_insights</code> + akun Business/Creator tertaut Facebook Page).
+      Tab <strong style="color:var(--paper);">Riwayat</strong> tetap bisa dipakai seperti biasa karena diambil dari log lokal,
+      tidak bergantung ke API Instagram.
+    </div>`;
+    return;
+  }
+
+  body.innerHTML = `<div class="empty-hint">Memuat insight&hellip;</div>`;
+
+  apiGetInsights(accountId).then((data) => {
+    if (!data.available) {
+      body.innerHTML = `
+        <div class="insight-disabled">
+          <strong>Belum ada data insight tersinkron</strong> — akun ini sudah tertaut API, tapi
+          <code>sync-insights.js</code> belum pernah dijalankan untuk akun ini (atau belum ada postingan tercatat).
+          ${data.reason ? '<br>' + data.reason : ''}
+        </div>
+        <div class="insight-toolbar" style="margin-top:14px;">${scanInsightBtnHtml()}</div>
+      `;
+      bindScanInsightBtn(accountId);
+      return;
+    }
+
+    body.innerHTML = `
+      <div class="insight-toolbar">
+        <div class="insight-sync-meta">Terakhir disinkron: ${new Date(data.syncedAt).toLocaleString('id-ID')}</div>
+        ${scanInsightBtnHtml()}
+      </div>
+      <div class="insight-tabs">
+        <button type="button" class="insight-tab active" data-win="7">7 Hari</button>
+        <button type="button" class="insight-tab" data-win="30">30 Hari</button>
+        <button type="button" class="insight-tab" data-win="month">Rekap Bulanan</button>
+      </div>
+      <div id="insightPanel"></div>
+    `;
+    bindScanInsightBtn(accountId);
+    const posts = data.posts || [];
+    renderInsightWindow(posts, 7);
+
+    body.querySelectorAll('.insight-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        body.querySelectorAll('.insight-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.win === 'month') renderInsightMonthly(posts);
+        else renderInsightWindow(posts, parseInt(tab.dataset.win, 10));
+      });
+    });
+  });
+}
+
+function daysSince(isoString) {
+  return (Date.now() - new Date(isoString).getTime()) / 86400000;
+}
+
+// Jumlahkan metric numerik lintas post -- post yang field-nya tidak ada
+// (gagal diambil) dilewati per-field, TIDAK dianggap 0 (biar total tidak
+// under-count secara diam-diam kalau ada post yang gagal).
+function sumPostMetrics(posts) {
+  const sums = { likes: 0, comments: 0, shares: 0, views: 0, reach: 0, followsFromPost: 0 };
+  let anyFollows = false;
+  posts.forEach((p) => {
+    ['likes', 'comments', 'shares', 'views', 'reach'].forEach((k) => { if (typeof p[k] === 'number') sums[k] += p[k]; });
+    if (typeof p.followsFromPost === 'number') { sums.followsFromPost += p.followsFromPost; anyFollows = true; }
+  });
+  if (!anyFollows) sums.followsFromPost = null;
+  return sums;
+}
+
+// Chip statistik per-postingan. Kalau SEMUA metric utama gagal diambil
+// (misal postingannya sudah dihapus dari Instagram), tampilkan pesan jelas
+// -- bukan angka 0 yang menyesatkan. Kalau SEBAGIAN berhasil, tampilkan
+// yang ada, sisanya "—" (bukan 0 juga).
+function postStatChips(p) {
+  const anyData = ['likes', 'comments', 'shares', 'views', 'reach'].some((k) => typeof p[k] === 'number');
+  if (!anyData) {
+    return `<div class="post-insight-error">Data tidak tersedia (postingan mungkin sudah dihapus / tidak bisa diakses lagi).</div>`;
+  }
+  const followsNA = p.followsFromPost === null || p.followsFromPost === undefined;
+  return `<div class="post-insight-stats">
+    <span title="Like">${svgIcon('heart', 'width="12" height="12"')}${fmtNum(p.likes)}</span>
+    <span title="Komentar">${svgIcon('comment', 'width="12" height="12"')}${fmtNum(p.comments)}</span>
+    <span title="Share">${svgIcon('share', 'width="12" height="12"')}${fmtNum(p.shares)}</span>
+    <span title="Jumlah tayangan">${svgIcon('eye', 'width="12" height="12"')}${fmtNum(p.views)}</span>
+    <span title="Akun terjangkau">Reach ${fmtNum(p.reach)}</span>
+    <span title="Follower baru dari post ini" class="${followsNA ? 'post-insight-stat na' : ''}">${svgIcon('userplus', 'width="12" height="12"')}${followsNA ? 'n/a' : fmtNum(p.followsFromPost)}</span>
+  </div>`;
+}
+
+function renderPostInsightPanel(panel, posts, windowLabel) {
+  const sums = sumPostMetrics(posts);
+  panel.innerHTML = `
+    <div class="insight-subtitle">RINGKASAN &middot; ${windowLabel}</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-value">${fmtNum(sums.likes)}</div><div class="kpi-label">Like</div></div>
+      <div class="kpi-card"><div class="kpi-value">${fmtNum(sums.comments)}</div><div class="kpi-label">Komentar</div></div>
+      <div class="kpi-card"><div class="kpi-value">${fmtNum(sums.shares)}</div><div class="kpi-label">Share</div></div>
+      <div class="kpi-card"><div class="kpi-value">${fmtNum(sums.views)}</div><div class="kpi-label">Tayangan</div></div>
+      <div class="kpi-card"><div class="kpi-value">${fmtNum(sums.reach)}</div><div class="kpi-label">Akun Terjangkau</div></div>
+      <div class="kpi-card"><div class="kpi-value">${sums.followsFromPost === null ? 'n/a' : fmtNum(sums.followsFromPost)}</div><div class="kpi-label">Follower Baru</div></div>
+    </div>
+    <div class="insight-subtitle">PER POSTINGAN</div>
+    <div class="post-insight-list">
+      ${posts.length ? posts.map((p) => `
+        <div class="post-insight-row">
+          <div class="post-insight-topic">${p.topic || '(tanpa judul)'}</div>
+          <div class="post-insight-date">${new Date(p.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          ${postStatChips(p)}
+        </div>`).join('') : '<div class="empty-hint">Belum ada postingan pada rentang ini.</div>'}
+    </div>
+  `;
+}
+
+function renderInsightWindow(allPosts, days) {
+  const panel = document.getElementById('insightPanel');
+  if (!panel) return;
+  const posts = allPosts.filter((p) => daysSince(p.timestamp) <= days);
+  renderPostInsightPanel(panel, posts, days + ' HARI TERAKHIR');
+}
+
+function renderInsightMonthly(allPosts) {
+  const panel = document.getElementById('insightPanel');
+  if (!panel) return;
+
+  const groups = {};
+  allPosts.forEach((p) => {
+    const d = new Date(p.timestamp);
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (!groups[key]) groups[key] = { label: BULAN_ID[d.getMonth()] + ' ' + d.getFullYear(), posts: [], sortKey: key };
+    groups[key].posts.push(p);
+  });
+  const monthList = Object.values(groups).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+
+  if (monthList.length === 0) {
+    panel.innerHTML = `
+      <div class="insight-subtitle">REKAP BULANAN &middot; bisa dicek kapan saja</div>
+      <div class="empty-hint">Belum ada postingan tercatat.</div>
+    `;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="insight-subtitle">REKAP BULANAN &middot; bisa dicek kapan saja, tidak terbatas bulan berjalan</div>
+    <div class="month-list">
+      ${monthList.map((m) => {
+        const sums = sumPostMetrics(m.posts);
+        return `<div class="month-row">
+          <div class="month-name">${m.label}</div>
+          <div class="month-stats">
+            <span>${m.posts.length} post</span>
+            <span>${svgIcon('heart', 'width="11" height="11"')}${fmtNum(sums.likes)}</span>
+            <span>${svgIcon('eye', 'width="11" height="11"')}${fmtNum(sums.views)}</span>
+            <span>Reach ${fmtNum(sums.reach)}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function setupScrollSpy(detail) {
+  const sectionIds = ['secApprove', 'secHistory', 'secInsight'];
+  const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+  const pills = Array.from(detail.querySelectorAll('.nav-pill'));
+  if (window._detailObserver) window._detailObserver.disconnect();
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = sections.indexOf(e.target);
+        pills.forEach((p, i) => p.classList.toggle('active', i === idx));
+      }
+    });
+  }, { root: detail, threshold: 0.35 });
+  sections.forEach(s => obs.observe(s));
+  window._detailObserver = obs;
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+runBoot();
+tickClock(); setInterval(tickClock, 1000);
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+
+</body>
+</html>

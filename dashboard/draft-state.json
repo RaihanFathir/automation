@@ -1,0 +1,63 @@
+{
+  "dunia_fana": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "projc02": {
+    "status": "done",
+    "lastStatusDate": "2026-09-14",
+    "draft": null
+  },
+  "game001": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "angkernyoo": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "terkini": {
+    "status": "draft",
+    "lastStatusDate": "2026-09-18",
+    "draft": {
+      "topic": "sidang roy suryo",
+      "caption": "Mantan Menpora Roy Suryo akhirnya menjalani sidang perdana terkait kasus dugaan fitnah yang menyeret namanya. Persidangan ini beragendakan pembacaan surat dakwaan dari jaksa penuntut umum atas perkara fitnah terkait ijazah Presiden ke-7 Joko Widodo. Kehadiran Roy Suryo di persidangan ini menandai dimulainya proses pembuktian di meja hijau setelah sebelumnya perkara ini sempat diwarnai dengan rangkaian proses praperadilan. Agenda sidang ini menjadi sorotan publik karena proses hukum yang dinilai cukup panjang sebelum akhirnya sampai pada tahap pembacaan dakwaan di pengadilan. Proses hukum akan terus berjalan untuk mendalami bukti-bukti serta keterangan saksi-saksi yang akan dihadirkan dalam rangkaian sidang selanjutnya. Bagaimana menurut kalian mengenai kelanjutan kasus ini? Berikan pendapat kalian di kolom komentar.\n\n#RoySuryo #SidangKasus #UpdateHukum #BreakingNewsIndonesia #BeritaTerkini",
+      "highlightText": "ROY SURYO JALANI SIDANG KASUS FITNAH IJAZAH",
+      "imagePaths": [
+        "C:\\Users\\hp\\.openclaw\\workspace\\skills\\orchestrator\\drafts\\terkini\\slide-1.jpg"
+      ],
+      "imageFileNames": [
+        "slide-1.jpg"
+      ],
+      "createdAt": "2026-09-18T03:00:53.998Z"
+    }
+  },
+  "kuliner_nusantara": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "seputar_sejarah": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "dino": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "satwa": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  },
+  "anatomi": {
+    "status": "standby",
+    "lastStatusDate": "2026-09-08",
+    "draft": null
+  }
+}

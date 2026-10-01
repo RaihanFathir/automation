@@ -1,0 +1,15 @@
+[
+  {
+    "id": "terkini",
+    "displayName": "terkini",
+    "topicLabel": "Berita trending Indonesia (Google Trends)",
+    "scheduleTime": "09:50",
+    "enabled": true,
+    "draftModeEnabled": true,
+    "pipeline": "trending-news",
+    "logFile": "orchestrator-log-terkini.jsonl",
+    "apiConnected": true,
+    "igUsername": "terkini001",
+    "iconUrl": "/unit-icons/terkini.png"
+  }
+]
